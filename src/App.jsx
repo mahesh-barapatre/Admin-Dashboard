@@ -7,6 +7,14 @@ import Input from "./components/Input";
 import { Icon } from "@iconify/react";
 
 function App() {
+  //data from the api
+  const [userData, setUserData] = useState([]);
+
+  //search functionality values
+  const [searchValue, setSearchValue] = useState("");
+  const [searchField, setSearchField] = useState("name");
+
+  //function to delete selected rows
   const deleteSelected = () => {
     const newList = userData.filter((user) => {
       return !selectedRows.includes(user.id);
@@ -16,46 +24,27 @@ function App() {
   };
 
   const [isAllRowsChecked, setIsAllRowsChecked] = useState(false);
+  const [selectedRows, setSelectedRows] = useState([]);
 
+  //function to handle row selection
   const handleRows = () => {
-    // if (isAllRowsChecked) {
-    //   console.log(selectedRows);
-    //   setSelectedRows(selectedRows.splice({ startIndex }, 10));
-    // }
     if (isAllRowsChecked) {
-      // console.log(selectedRows);
-
       // Create a copy of the selectedRows array
       const newSelectedRows = [...selectedRows];
 
-      // Use splice to remove elements from the copy
-      console.log(startIndex)
+      // remove elements from the copy
       newSelectedRows.splice(startIndex, 10);
 
       // Update the state with the modified copy
       setSelectedRows(newSelectedRows);
-    }
-
-    // else {
-    //   let x = 1;
-    //   while (x <= 10) {
-    //     console.log(x)
-    //     if (!selectedRows.includes(`${startIndex + x}`)) {
-    //       console.log(`${startIndex + x}`);
-    //       setSelectedRows([...selectedRows, `${startIndex+x}`]);
-    //     }
-    //     x++;
-    //   }
-    // }
-    else {
+    } else {
+      // Add selected Row
       setSelectedRows((prevSelectedRows) => {
         let newSelectedRows = [...prevSelectedRows];
         let x = 1;
         while (x <= 10) {
-          // console.log(x);
           const newRow = `${startIndex + x}`;
           if (!newSelectedRows.includes(newRow)) {
-            // console.log(newRow);
             newSelectedRows.push(newRow);
           }
           x++;
@@ -63,25 +52,24 @@ function App() {
         return newSelectedRows;
       });
     }
-    console.log(selectedRows);
   };
 
-  const [selectedRows, setSelectedRows] = useState([]);
+  // function to check all rows are selected
   const checkSelectedAll = () => {
     for (let x = 1; x <= 10; x++) {
       if (!selectedRows.includes(`${startIndex + x}`)) {
-        // console.log(isAllRowsChecked);
         return setIsAllRowsChecked(false);
       }
     }
     setIsAllRowsChecked(true);
   };
 
+  // Effect to check selected all rows
   useEffect(() => {
-      checkSelectedAll();
+    checkSelectedAll();
   }, [selectedRows]);
 
-
+  // Function to handle checkbox change
   const handleCheckboxChange = (userId) => {
     // Toggle the selection state of the checkbox
     setSelectedRows((prevSelectedRows) => {
@@ -95,40 +83,38 @@ function App() {
     });
   };
 
+  // row edit variables
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editRole, setEditRole] = useState("");
   const [editableRow, setEditableRow] = useState(null);
 
+  // Function to reset edit state
   const resetEditState = () => {
     setEditEmail("");
     setEditName("");
     setEditRole("");
   };
 
+  // Function to handle edit click
   const handleEditClick = (userId) => {
-    // Set the editable row to the clicked user ID
     setEditableRow(userId);
   };
 
+  // Function to handle save click
   const handleSaveClick = (userId) => {
-    // Save the changes and update the userData state
-    // You might want to implement logic to handle the actual saving of data
     editValue(userId);
     resetEditState();
     setEditableRow(null);
   };
 
-  // Cancel the editing and reset the editableRow state
+  // Function to handle cancel click
   const handleCancelClick = () => {
     resetEditState();
     setEditableRow(null);
   };
 
-  const [userData, setUserData] = useState([]);
-  const [searchValue, setSearchValue] = useState("");
-  const [searchField, setSearchField] = useState("name");
-
+  // function to fetch api data in start
   useEffect(() => {
     const Data = async () => {
       await axios
@@ -136,29 +122,26 @@ function App() {
           "https://geektrust.s3-ap-southeast-1.amazonaws.com/adminui-problem/members.json"
         )
         .then((res) => {
-          // console.log(res.data);
-          // console.log(typeof(res.data));
           setUserData(res.data);
-          // console.log(userData);
         })
         .catch((err) => console.log(err));
     };
     Data();
   }, []);
 
+  // function to delete single row
   const deleteUser = (userId) => {
     const updatedUsers = userData.filter((user) => user.id !== userId);
-    // console.log(updatedUsers);
     setUserData(updatedUsers);
   };
 
+  // edit row
   const editValue = (userId) => {
     let newData = {
       name: editName,
       email: editEmail,
       role: editRole,
     };
-    // console.log(newData)
     let updatedUserList = userData.map((user) => {
       if (user.id === userId) {
         return { ...user, ...newData };
@@ -170,7 +153,6 @@ function App() {
   };
 
   //pagination setup
-
   const itemsPerPage = 10;
 
   const [currentPage, setCurrentPage] = useState(0);
@@ -191,37 +173,29 @@ function App() {
   };
 
   const searchHandler = async () => {
-    // console.log(searchValue)
-    // console.log(searchField)
-
     //api calling
     await axios
       .get(
         "https://geektrust.s3-ap-southeast-1.amazonaws.com/adminui-problem/members.json"
       )
       .then((res) => {
-        // setUserData(res.data);
-        console.log(res.data);
         let filterData = res.data.filter((item) => {
-          console.log(item[searchField]);
-          console.log(item.name);
           return item[searchField] === searchValue;
         });
-        // console.log(filterData)
         setUserData(filterData);
       })
       .catch((err) => console.log(err));
 
-    setSearchValue(""); 
+    setSearchValue("");
   };
 
   return (
     <div className="p-4 h-screen w-screen">
+      {/* search bar and delete selected btn */}
       <div className="flex justify-between items-center h-4">
         <div className="flex items-center">
           <select
             value={searchField}
-            id="field"
             className="m-2 w-20 p-1 rounded-sm border border-solid"
             onChange={(e) => {
               setSearchField(e.target.value);
@@ -250,6 +224,8 @@ function App() {
             <Icon icon="ic:round-search" color="white" width="26" height="26" />
           </div>
         </div>
+
+        {/* deleteSelected rows btn */}
         <div
           className=" h-max w-max cursor-pointer"
           onClick={() => deleteSelected()}
@@ -262,6 +238,8 @@ function App() {
           />
         </div>
       </div>
+
+      {/* dashboard column headings */}
       <div className="col flex justify-evenly items-center my-4 border border-solid border-gray-200">
         <input
           type="checkbox"
@@ -274,6 +252,8 @@ function App() {
         <Heading name={"Role"} w={"w-2/12"} />
         <Heading name={"Actions"} w={"w-2/12"} />
       </div>
+
+      {/* data in rows */}
       {currentItems.map((user) => {
         return (
           <div
@@ -381,6 +361,7 @@ function App() {
         );
       })}
 
+      {/* footer */}
       <div className="footer flex justify-between w-full fixed bottom-3 right-2 left-2">
         <div className="">
           {selectedRows.length} of {userData.length} row(s) selected.
@@ -396,6 +377,7 @@ function App() {
           >
             <Icon icon="wpf:first" color="skyblue" width="26" height="26" />
           </div>
+
           {/* pagination setup */}
           <ReactPaginate
             previousLabel="<"
